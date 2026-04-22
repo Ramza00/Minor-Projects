@@ -1,13 +1,5 @@
 #include "dijkstra.h"
 
-void Dijkstra::_bind_methods() {
-    godot::ClassDB::bind_method(godot::D_METHOD("vertex","node","subgraph"), &Dijkstra::vertex, DEFVAL(-1));
-    godot::ClassDB::bind_method(godot::D_METHOD("edge","a","b","bidirectional"), &Dijkstra::edge, DEFVAL(true));
-    godot::ClassDB::bind_method(godot::D_METHOD("mask","node","weight"), &Dijkstra::mask);
-    godot::ClassDB::bind_method(godot::D_METHOD("subgraphValuate","subgraph","reachable", "weight"), &Dijkstra::subgraphValuate);
-    godot::ClassDB::bind_method(godot::D_METHOD("flow","strength","origin"), &Dijkstra::flow);
-}
-
 //should have another var in edgeHM for masking
 Dijkstra::Dijkstra(){
     edgeHM = std::unordered_map<int, std::tuple<std::unordered_set<int>,int,int>>{}; // collection of node id : (neighbors, node type, mask)
@@ -34,7 +26,7 @@ void Dijkstra::subgraphValuate(const int subgraph, const bool reachable, const i
 }
 
 //return all traversable nodes as keys with paths as values
-godot::Dictionary Dijkstra::flow(const int strength, const int origin){
+std::unordered_map<int,std::vector<int>> Dijkstra::flow(const int strength, const int origin){
     std::priority_queue<std::pair<int,int>> pq; // strength, node
     std::unordered_map<int,std::pair<int,std::vector<int>>> visited; //node : (strength, node path)
     std::pair<int,int> strengthOrigin; //formatting for priority queue
@@ -60,20 +52,10 @@ godot::Dictionary Dijkstra::flow(const int strength, const int origin){
         }
     }
     //destination node, path
-    // std::unordered_map<int,std::vector<int>> returnMap;
-    // returnMap.reserve(visited.size());
-    // for(auto& [key, pairVal]: visited){
-    //     returnMap[key] = std::move(pairVal.second);
-    // }
-    //return returnMap;
-
-    godot::Dictionary returnMap;
+    std::unordered_map<int,std::vector<int>> returnMap;
+    returnMap.reserve(visited.size());
     for(auto& [key, pairVal]: visited){
-        godot::PackedInt32Array t = {};
-        for(int& j : pairVal.second){
-            t.append(j);
-        }
-        returnMap[key] = t;
+        returnMap[key] = std::move(pairVal.second);
     }
     return returnMap;
 }
